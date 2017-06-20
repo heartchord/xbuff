@@ -1,6 +1,8 @@
 #include "xbuff.h"
 
-inline KG_Buffer::KG_Buffer(unsigned int uOriSize, unsigned int uResSize, void *pvBuff) : 
+KG_NAMESPACE_BEGIN(xbuff)
+
+KG_Buffer::KG_Buffer(unsigned int uOriSize, unsigned int uResSize, void *pvBuff) : 
     m_uOriSize(uOriSize), m_uCurSize(uOriSize), m_uResSize(uResSize), m_pvBuff(pvBuff)
 {
     KG_ASSERT(m_uOriSize > 0);
@@ -8,26 +10,29 @@ inline KG_Buffer::KG_Buffer(unsigned int uOriSize, unsigned int uResSize, void *
     KG_ASSERT(NULL != m_pvBuff);
 }
 
-inline KG_Buffer::~KG_Buffer()
+KG_Buffer::~KG_Buffer()
 {
+//#ifdef _DEBUG
+//    printf("KG_Buffer::~KG_Buffer() is invoked.\n");
+//#endif
 }
 
-inline unsigned int KG_Buffer::ResSize()
+unsigned int KG_Buffer::ResSize()
 {
     return m_uResSize;
 }
 
-inline unsigned int KG_Buffer::OriSize()
+unsigned int KG_Buffer::OriSize()
 {
     return m_uOriSize;
 }
 
-inline unsigned int KG_Buffer::CurSize()
+unsigned int KG_Buffer::CurSize()
 {
     return m_uCurSize;
 }
 
-inline int KG_Buffer::SetSize(unsigned int uNewSize)
+int KG_Buffer::SetSize(unsigned int uNewSize)
 {
     int nResult = false;
 
@@ -41,13 +46,13 @@ Exit0:
     return nResult;
 }
 
-inline int KG_Buffer::ResetSize()
+int KG_Buffer::ResetSize()
 {
     m_uCurSize = m_uOriSize;
     return true;
 }
 
-inline void * KG_Buffer::ResBuf() const
+void * KG_Buffer::ResBuf() const
 {
     if (m_uResSize <= 0)
     {
@@ -57,7 +62,7 @@ inline void * KG_Buffer::ResBuf() const
     return m_pvBuff;
 }
 
-inline void * KG_Buffer::Buf() const
+void * KG_Buffer::Buf() const
 {
     if (m_uCurSize <= 0)
     {
@@ -66,3 +71,5 @@ inline void * KG_Buffer::Buf() const
 
     return (void *)((char *)m_pvBuff + m_uResSize);
 }
+
+KG_NAMESPACE_END

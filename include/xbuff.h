@@ -3,11 +3,13 @@
 #include "xzero.h"
 #include <memory>
 
+KG_NAMESPACE_BEGIN(xbuff)
+
 class IKG_Buffer : private xzero::KG_UnCopyable
 {
 public:
-    IKG_Buffer() {}
-    virtual ~IKG_Buffer() {}
+    IKG_Buffer();
+    virtual ~IKG_Buffer();
 
 public:
     virtual unsigned int ResSize() = 0;
@@ -20,6 +22,17 @@ public:
     virtual void * ResBuf() const = 0;
     virtual void * Buf()    const = 0;
 };
+
+inline IKG_Buffer::IKG_Buffer()
+{
+}
+
+inline IKG_Buffer::~IKG_Buffer()
+{
+//#ifdef _DEBUG
+//    printf("IKG_Buffer::~IKG_Buffer() is invoked.\n");
+//#endif
+}
 
 typedef IKG_Buffer *                PIKG_Buffer;
 typedef std::shared_ptr<IKG_Buffer> SPIKG_Buffer;
@@ -49,30 +62,88 @@ private:
     void *       m_pvBuff;
 };
 
-template <class MP>
-PIKG_Buffer KG_GetBuffFromMemoryPool(MP &mp, unsigned int uRequiredSize, unsigned int uReservedSize = 0)
-{
-    KG_Buffer *  pResult   = NULL;
-    unsigned int uBuffSize = 0;
-    void      *  pvBuff    = NULL;
-    void      *  pvData    = NULL;
+typedef KG_Buffer *                PKG_Buffer;
+typedef std::shared_ptr<KG_Buffer> SPKG_Buffer;
 
-    KG_PROCESS_ERROR(uRequiredSize > 0 && "It seems that uRequiredSize is 0!");
+template <class MP>
+PIKG_Buffer KG_GetBuffFromMemoryPool(MP *pMP, unsigned int uRequiredSize, unsigned int uReservedSize = 0)
+{
+    PIKG_Buffer  pResult   = NULL;
+    int          nRetCode  = 0;
+    unsigned int uBuffSize = 0;
+    void *       pvBuff    = NULL;
+    void *       pvData    = NULL;
+
+    KG_PROCESS_PTR_ERROR(pMP);
+    KG_PROCESS_ERROR(uRequiredSize > 0 && "uRequiredSize can't be 0!");
 
     uBuffSize = sizeof(KG_Buffer) + uRequiredSize + uReservedSize;
-    pvBuff    = mp.Get(uBuffSize);
+    nRetCode  = pMP->Get(&pvBuff, uBuffSize);
+    KG_PROCESS_ERROR(nRetCode);
     KG_PROCESS_PTR_ERROR(pvBuff);
+
+//#ifdef _DEBUG
+//    printf("KG_GetBuffFromMemoryPool() pvBuff = %X\n", pvBuff);
+//#endif
 
     pvData  = (void *)(((char *)pvBuff) + sizeof(KG_Buffer));
     pResult = ::new(pvBuff)KG_Buffer(uRequiredSize, uReservedSize, pvData);         // placement operator new
 
 Exit0:
-    return pBuffer;
+    return pResult;
 }
 
 template <class MP>
-SPIKG_Buffer KG_GetSharedBuffFromMemoryPool(MP &mp, unsigned int uRequiredSize, unsigned int uReservedSize = 0)
+class KG_SharedBufferDeleter
 {
-    PIKG_Buffer pBuff = KG_GetBuffFromMemoryPool(mp, uRequiredSize, uReservedSize);
-    return SPIKG_Buffer(pBuff);
+public:
+    KG_SharedBufferDeleter(MP *pMP);
+    ~KG_SharedBufferDeleter();
+
+public:
+    void operator()(PIKG_Buffer piBuff);
+
+private:
+    MP *m_pMemoryPool;
+
+};
+
+template <class MP>
+inline KG_SharedBufferDeleter<MP>::KG_SharedBufferDeleter(MP *pMemoryPool) : m_pMemoryPool(pMemoryPool)
+{
+    KG_ASSERT(NULL != m_pMemoryPool);
 }
+
+template <class MP>
+inline KG_SharedBufferDeleter<MP>::~KG_SharedBufferDeleter()
+{
+}
+
+template <class MP>
+inline void KG_SharedBufferDeleter<MP>::operator()(PIKG_Buffer piBuff)
+{
+    int   nRetCode = false;
+    void *pvBuff   = NULL;
+
+    KG_PROCESS_PTR_ERROR(piBuff);
+    KG_PROCESS_PTR_ERROR(m_pMemoryPool);
+
+    pvBuff = (void *)piBuff;
+    KG_PROCESS_PTR_ERROR(pvBuff);
+
+    piBuff->~IKG_Buffer();                                              // this will invoke KG_Buffer::~KG_Buffer() automatically
+    nRetCode = m_pMemoryPool->Put(&pvBuff);
+    KG_PROCESS_ERROR(nRetCode);
+
+Exit0:
+    return;
+}
+
+template <class MP>
+SPIKG_Buffer KG_GetSharedBuffFromMemoryPool(MP *pMP, unsigned int uRequiredSize, unsigned int uReservedSize = 0)
+{
+    PIKG_Buffer pBuff = KG_GetBuffFromMemoryPool(pMP, uRequiredSize, uReservedSize);
+    return SPIKG_Buffer(pBuff, KG_SharedBufferDeleter<MP>(pMP));
+}
+
+KG_NAMESPACE_END
