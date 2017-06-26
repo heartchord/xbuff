@@ -2,7 +2,7 @@
 
 KG_NAMESPACE_BEGIN(xbuff)
 
-KG_Buffer::KG_Buffer(unsigned int uOriSize, unsigned int uResSize, void *pvBuff) : 
+KG_Buffer::KG_Buffer(UINT32 uOriSize, UINT32 uResSize, void *pvBuff) : 
     m_uOriSize(uOriSize), m_uCurSize(uOriSize), m_uResSize(uResSize), m_pvBuff(pvBuff)
 {
     KG_ASSERT(m_uOriSize > 0);
@@ -17,22 +17,22 @@ KG_Buffer::~KG_Buffer()
 //#endif
 }
 
-unsigned int KG_Buffer::ResSize()
+UINT32 KG_Buffer::ResSize()
 {
     return m_uResSize;
 }
 
-unsigned int KG_Buffer::OriSize()
+UINT32 KG_Buffer::OriSize()
 {
     return m_uOriSize;
 }
 
-unsigned int KG_Buffer::CurSize()
+UINT32 KG_Buffer::CurSize()
 {
     return m_uCurSize;
 }
 
-int KG_Buffer::SetSize(unsigned int uNewSize)
+int KG_Buffer::SetSize(UINT32 uNewSize)
 {
     int nResult = false;
 

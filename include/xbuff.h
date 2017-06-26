@@ -12,11 +12,11 @@ public:
     virtual ~IKG_Buffer();
 
 public:
-    virtual unsigned int ResSize() = 0;
-    virtual unsigned int OriSize() = 0;
-    virtual unsigned int CurSize() = 0;
+    virtual UINT32 ResSize() = 0;
+    virtual UINT32 OriSize() = 0;
+    virtual UINT32 CurSize() = 0;
 
-    virtual int SetSize(unsigned int uNewSize) = 0;
+    virtual int SetSize(UINT32 uNewSize) = 0;
     virtual int ResetSize()                    = 0;
 
     virtual void * ResBuf() const = 0;
@@ -40,25 +40,25 @@ typedef std::shared_ptr<IKG_Buffer> SPIKG_Buffer;
 class KG_Buffer : public IKG_Buffer
 {
 public:
-    KG_Buffer(unsigned int uOriSize, unsigned int uResSize, void *pvBuff);
+    KG_Buffer(UINT32 uOriSize, UINT32 uResSize, void *pvBuff);
 private:
     virtual ~KG_Buffer();
 
 public:
-    virtual unsigned int ResSize();
-    virtual unsigned int OriSize();
-    virtual unsigned int CurSize();
+    virtual UINT32 ResSize();
+    virtual UINT32 OriSize();
+    virtual UINT32 CurSize();
 
-    virtual int SetSize(unsigned int uNewSize);
+    virtual int SetSize(UINT32 uNewSize);
     virtual int ResetSize();
 
     virtual void * ResBuf() const;
     virtual void * Buf()    const;
 
 private:
-    unsigned int m_uResSize;
-    unsigned int m_uOriSize;
-    unsigned int m_uCurSize;
+    UINT32 m_uResSize;
+    UINT32 m_uOriSize;
+    UINT32 m_uCurSize;
     void *       m_pvBuff;
 };
 
@@ -66,11 +66,11 @@ typedef KG_Buffer *                PKG_Buffer;
 typedef std::shared_ptr<KG_Buffer> SPKG_Buffer;
 
 template <class MP>
-PIKG_Buffer KG_GetBuffFromMemoryPool(MP *pMP, unsigned int uRequiredSize, unsigned int uReservedSize = 0)
+PIKG_Buffer KG_GetBuffFromMemoryPool(MP *pMP, UINT32 uRequiredSize, UINT32 uReservedSize = 0)
 {
     PIKG_Buffer  pResult   = NULL;
     int          nRetCode  = 0;
-    unsigned int uBuffSize = 0;
+    UINT32 uBuffSize = 0;
     void *       pvBuff    = NULL;
     void *       pvData    = NULL;
 
@@ -140,7 +140,7 @@ Exit0:
 }
 
 template <class MP>
-SPIKG_Buffer KG_GetSharedBuffFromMemoryPool(MP *pMP, unsigned int uRequiredSize, unsigned int uReservedSize = 0)
+SPIKG_Buffer KG_GetSharedBuffFromMemoryPool(MP *pMP, UINT32 uRequiredSize, UINT32 uReservedSize = 0)
 {
     PIKG_Buffer pBuff = KG_GetBuffFromMemoryPool(pMP, uRequiredSize, uReservedSize);
     return SPIKG_Buffer(pBuff, KG_SharedBufferDeleter<MP>(pMP));
