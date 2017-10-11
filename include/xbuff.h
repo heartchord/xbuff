@@ -1,6 +1,6 @@
 #pragma once
 
-#include "xzero.h"
+#include "../../xzero/include/xzero.h"
 #include <memory>
 
 KG_NAMESPACE_BEGIN(xbuff)
